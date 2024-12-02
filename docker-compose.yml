@@ -23,6 +23,8 @@ services:
       MYSQL_ALLOW_EMPTY_PASSWORD: $DATABASE_ALLOW_EMPTY_PASSWORD
     ports: 
       - $DATABASE_PORT_EXPOSE:$DATABASE_PORT
+    expose:
+      - $DATABASE_PORT_EXPOSE
 
   service_api:
     build:
