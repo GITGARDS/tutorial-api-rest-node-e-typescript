@@ -1,0 +1,73 @@
+FROM node:latest
+
+# create destination directory
+RUN mkdir -p /usr/src/api-node-e-typescript
+WORKDIR /usr/src/api-node-e-typescript
+
+# Update and install dependency
+# RUN apk update && apk upgrade
+# RUN apk add git
+# docker-compose bash command dependency
+# RUN apk add bash
+
+RUN rm -rf ./node_modules
+RUN rm -rf package-lock.json
+
+# Install app dependencies
+COPY ./package.json .
+RUN yarn install
+# Bundle app source
+COPY . .
+
+# run todosimple
+CMD ["yarn", "start"]
+
+# version: '3.8'
+
+networks:
+  network_api:
+    driver: bridge
+
+volumes:
+  volume_api:
+  volume_mysql:
+
+services:
+  service_bd:
+    container_name: container_mysql
+    env_file: ./.env
+    image: mysql:9.1.0
+    volumes:
+      - volume_mysql:/var/lib/mysql
+    networks:
+      - network_api
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bd_api_node_e_typescript
+      MYSQL_ALLOW_EMPTY_PASSWORD: true
+    ports: 
+      - 33:3306
+
+  service_api:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    working_dir: /usr/src/api-node-e-typescript/api
+    env_file: ./.env
+    container_name: container_api
+    depends_on:
+      - service_bd
+    volumes:
+      - volume_api:/var/lib/api
+    image: image_api/service_api
+    networks:
+      - network_api
+    environment:
+      DATABASE_HOST: service_bd
+      DATABASE_NAME: bd_api_node_e_typescript
+      DATABASE_USER: root
+      DATABASE_PASSWORD: root
+      MYSQL_ALLOW_EMPTY_PASSWORD: true      
+    ports: 
+      - 30:3001
+
